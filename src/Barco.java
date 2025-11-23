@@ -1,20 +1,45 @@
 import java.util.ArrayList;
-import java.util.List;
 
 public class Barco {
 
-    private final List<Pasajero> pasajeros = new ArrayList<>();
+    private ArrayList<Pasajero> pasajeros;
 
-    public Barco(List<Pasajero> pasajeros) {
-        this.pasajeros.addAll(pasajeros);
+    public Barco(ArrayList<Pasajero> listaPasajeros) {
+        this.pasajeros = new ArrayList<>();
+        this.pasajeros.addAll(listaPasajeros);
     }
 
-    public List<Pasajero> getPasajeros() {
-        return pasajeros;
+
+    public synchronized Pasajero sacarSiguientePasajero() {
+        if (pasajeros.isEmpty()) {
+            return null;
+        }
+
+        Pasajero pasajeroPrioritario = null;
+        int prioridadMasAlta = 4;
+
+        for (Pasajero p : pasajeros) {
+            if (p.getPrioridad() < prioridadMasAlta) {
+                prioridadMasAlta = p.getPrioridad();
+            }
+        }
+
+        for (int i = 0; i < pasajeros.size(); i++) {
+            Pasajero p = pasajeros.get(i);
+            if (p.getPrioridad() == prioridadMasAlta) {
+                pasajeroPrioritario = pasajeros.remove(i);
+                break;
+            }
+        }
+
+        return pasajeroPrioritario;
     }
 
-    public boolean hayPasajeros(){
+    public synchronized boolean hayPasajeros() {
         return !pasajeros.isEmpty();
     }
 
+    public synchronized int getPasajerosRestantes() {
+        return pasajeros.size();
+    }
 }
