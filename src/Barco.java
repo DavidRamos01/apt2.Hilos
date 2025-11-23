@@ -9,6 +9,10 @@ public class Barco {
         this.pasajeros.addAll(pasajeros);
     }
 
+    public List<Pasajero> getPasajeros() {
+        return pasajeros;
+    }
+
     public boolean hayPasajeros(){
         return !pasajeros.isEmpty();
     }
