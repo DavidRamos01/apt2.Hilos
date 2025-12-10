@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 
 public class Balsa {
 
@@ -6,6 +7,7 @@ public class Balsa {
     private int capacidad;
     private int tiempo;
     private ArrayList<Pasajero> pasajerosABordo = new ArrayList<>();
+    private Semaphore semaforo = new Semaphore(1);
 
     public Balsa(String nombre, int capacidad, int tiempo) {
         this.nombre = nombre;
@@ -25,17 +27,35 @@ public class Balsa {
         return tiempo;
     }
 
-    public synchronized ArrayList<Pasajero> getPasajerosABordo() {
-        return pasajerosABordo;
+    public  ArrayList<Pasajero> getPasajerosABordo() {
+        try {
+            semaforo.acquire();
+        } catch (InterruptedException e) {
+            return new ArrayList<>();
+        }
+
+        ArrayList<Pasajero> copiaLista = new ArrayList<>(pasajerosABordo);
+
+        semaforo.release();
+        return copiaLista;
     }
 
 
-    public synchronized boolean cargarPasajero(Pasajero pasajero) {
+    public boolean cargarPasajero(Pasajero pasajero) {
+        try {
+            semaforo.acquire();
+        } catch (InterruptedException e) {
+            return false;
+        }
+
         if (pasajerosABordo.size() < capacidad) {
             pasajerosABordo.add(pasajero);
-            return pasajerosABordo.size() == capacidad;
         }
-        return false;
+
+        boolean estaLlena = (pasajerosABordo.size() == capacidad);
+
+        semaforo.release();
+        return estaLlena;
     }
 
 
@@ -43,6 +63,8 @@ public class Balsa {
         System.out.println("------------- Balsa " + nombre + " INICIA VIAJE de RESCATE (Cap: " + capacidad + ", T: " + tiempo + "s) -----------------");
 
         Thread.sleep(tiempo * 100L);
+
+        semaforo.acquire();
 
         ArrayList<String> idsRescatados = new ArrayList<>();
         ArrayList<String> prioridadRescatados = new ArrayList<>();
@@ -56,5 +78,7 @@ public class Balsa {
         System.out.println("   " + nombre + " IDs Rescatadas: " + idsRescatados +" Prioridad" +prioridadRescatados);
 
         pasajerosABordo.clear();
+
+        semaforo.release();
     }
 }
