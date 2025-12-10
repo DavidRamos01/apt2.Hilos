@@ -1,17 +1,26 @@
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 
 public class Barco {
 
     private ArrayList<Pasajero> pasajeros;
+    private Semaphore semaforo = new Semaphore(1);
 
     public Barco(ArrayList<Pasajero> listaPasajeros) {
         this.pasajeros = new ArrayList<>();
         this.pasajeros.addAll(listaPasajeros);
     }
 
+    public Pasajero sacarSiguientePasajero() {
+        try {
+            semaforo.acquire(); // 1. Bloqueamos
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        }
 
-    public synchronized Pasajero sacarSiguientePasajero() {
         if (pasajeros.isEmpty()) {
+            semaforo.release();
             return null;
         }
 
@@ -32,14 +41,33 @@ public class Barco {
             }
         }
 
+        semaforo.release();
         return pasajeroPrioritario;
     }
 
-    public synchronized boolean hayPasajeros() {
-        return !pasajeros.isEmpty();
+    public boolean hayPasajeros() {
+        try {
+            semaforo.acquire();
+        } catch (InterruptedException e) {
+            return false;
+        }
+
+        boolean hayGente = !pasajeros.isEmpty();
+
+        semaforo.release();
+        return hayGente;
     }
 
-    public synchronized int getPasajerosRestantes() {
-        return pasajeros.size();
+    public int getPasajerosRestantes() {
+        try {
+            semaforo.acquire();
+        } catch (InterruptedException e) {
+            return 0;
+        }
+
+        int total = pasajeros.size();
+
+        semaforo.release();
+        return total;
     }
 }
